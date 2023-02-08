@@ -7,11 +7,11 @@
         mc:Ignorable="d"
         Title="Tetris" Height="800" Width="800" Background="#FF838383" WindowStartupLocation="CenterScreen" ResizeMode="CanMinimize" KeyDown="mainWindow_KeyDown">
     <Grid>
-        <Canvas x:Name="mainCanvas" HorizontalAlignment="Left" Height="700" Margin="50,30,0,0" VerticalAlignment="Top" Width="400" Background="White">
+        <Canvas x:Name="mainCanvas" HorizontalAlignment="Left" Height="700" Margin="50,30,0,0" VerticalAlignment="Top" Width="400" Background="White" ClipToBounds="True">
 
         </Canvas>
-        <Canvas x:Name="preview" HorizontalAlignment="Left" Height="190" Margin="543,30,0,0" VerticalAlignment="Top" Width="190" Background="White"/>
+        <Canvas x:Name="preview" HorizontalAlignment="Left" Height="256" Margin="504,30,0,0" VerticalAlignment="Top" Width="256" Background="White"/>
         <Button Content="Start" HorizontalAlignment="Left" Height="47" Margin="579,683,0,0" VerticalAlignment="Top" Width="154" Click="StartButton_Click"/>
-        <Label x:Name="scoreBox" Content="" HorizontalAlignment="Left" Height="39" Margin="543,288,0,0" VerticalAlignment="Top" Width="190" Background="White" VerticalContentAlignment="Center" HorizontalContentAlignment="Center"/>
+        <Label x:Name="scoreBox" Content="" HorizontalAlignment="Left" Height="39" Margin="543,341,0,0" VerticalAlignment="Top" Width="190" Background="White" VerticalContentAlignment="Center" HorizontalContentAlignment="Center"/>
     </Grid>
 </Window>
