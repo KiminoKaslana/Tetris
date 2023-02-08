@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Reflection.Emit;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
@@ -85,11 +86,11 @@ namespace Tetris
         {
             if (isFirst)
             {
-                currentFigure = new Figure(0, blockSize, ref mainCanvas, ref isOccupied, ref rectangles);
+                currentFigure = new Figure(random.Next(0, 7), blockSize, ref mainCanvas, ref isOccupied, ref rectangles);
                 currentFigure.FallToBottom += ReplaceFigure;
                 currentFigure.Show();
             }
-            nextFigure = new Figure(0, blockSize, ref mainCanvas, ref isOccupied, ref rectangles);
+            nextFigure = new Figure(random.Next(0, 7), blockSize, ref mainCanvas, ref isOccupied, ref rectangles);
             nextFigure.FallToBottom += ReplaceFigure;
         }
 
@@ -147,6 +148,7 @@ namespace Tetris
             }
             Trace.WriteLine(fullLineCount, "lines are full");
             CalculateScore(fullLineCount);
+            scoreBox.Content = score.ToString();
         }
 
         private void CheckColumnFull()
@@ -164,7 +166,10 @@ namespace Tetris
 
         private void CalculateScore(int lineNum)
         {
-
+            if (lineNum == 1) score += 10;
+            else if (lineNum == 2) score += 30;
+            else if (lineNum == 3) score += 100;
+            else return;
         }
 
         private void StartButton_Click(object sender, RoutedEventArgs e)
@@ -242,6 +247,9 @@ namespace Tetris
                 case 5:
                     DrawReverseZ();
                     break;
+                case 6:
+                    DrawT();
+                    break;
             }
         }
 
@@ -267,7 +275,7 @@ namespace Tetris
                     switch (direction)
                     {
                         case 0:
-                            for (int i = 0; i < 4; i++)
+                            for (int i = 0; i < 4; i++) //判断是否可以转向
                             {
                                 if (IsLegal(position.X, position.Y + i - 1))
                                 {
@@ -275,7 +283,7 @@ namespace Tetris
                                 }
                             }
 
-                            for (int i = 0; i < 4; i++)
+                            for (int i = 0; i < 4; i++) //
                             {
                                 Canvas.SetTop(rectangles[i], (position.Y + i - 1) * blockSize);
                                 Canvas.SetLeft(rectangles[i], position.X * blockSize);
@@ -283,7 +291,7 @@ namespace Tetris
                             }
                             break;
                         case 1:
-                            for (int i = 0; i < 4; i++)
+                            for (int i = 0; i < 4; i++) //判断是否可以转向
                             {
                                 if (IsLegal(position.X + i - 1, (int)position.Y))
                                 {
@@ -300,7 +308,7 @@ namespace Tetris
                             }
                             break;
                         case 2:
-                            for (int i = 0; i < 4; i++)
+                            for (int i = 0; i < 4; i++) //判断是否可以转向
                             {
                                 if (IsLegal(position.X, position.Y + i - 1))
                                 {
@@ -316,7 +324,7 @@ namespace Tetris
                             }
                             break;
                         case 3:
-                            for (int i = 0; i < 4; i++)
+                            for (int i = 0; i < 4; i++) //判断是否可以转向
                             {
                                 if (IsLegal(position.X + i - 1, (int)position.Y))
                                 {
@@ -336,18 +344,565 @@ namespace Tetris
                     break;
                 case 1:
                     //DrawL();
+                    switch (direction)
+                    {
+                        case 0:
+                            //(X,Y - 2)
+                            //(X,Y - 1)
+                            //(X,Y) (X + 1,Y)
+                            for (int i = 0; i < 3; i++) //判断是否可以转向
+                            {
+                                if (IsLegal(position.X, position.Y - i))
+                                {
+                                    return;
+                                }
+                            }
+                            if (IsLegal(position.X + 1, position.Y)) return;
+
+                            for (int i = 0; i < 3; i++)
+                            {
+                                Canvas.SetTop(rectangles[i], (position.Y - 2 + i) * blockSize); //画出转向后的矩形
+                                Canvas.SetLeft(rectangles[i], position.X * blockSize); //画出转向后的矩形
+                                rectangles[i].Tag = new Point(position.X, position.Y - 2 + i); //标记矩形位置
+                            }
+                            Canvas.SetTop(rectangles[3], (position.Y) * blockSize);
+                            Canvas.SetLeft(rectangles[3], (position.X + 1) * blockSize);
+                            rectangles[3].Tag = new Point(position.X + 1, position.Y);
+                            break;
+                        case 1:
+                            //(X,Y) (X + 1,Y) (X + 2,Y)
+                            //(X,Y + 1)
+                            for (int i = 0; i < 3; i++) //判断是否可以转向
+                            {
+                                if (IsLegal(position.X + i, position.Y))
+                                {
+                                    return;
+                                }
+                            }
+                            if (IsLegal(position.X, position.Y + 1)) return;
+
+                            for (int i = 0; i < 3; i++)
+                            {
+
+                                Canvas.SetTop(rectangles[i], position.Y * blockSize);
+                                Canvas.SetLeft(rectangles[i], (position.X + i) * blockSize);
+                                rectangles[i].Tag = new Point(position.X + i, position.Y);
+                            }
+                            Canvas.SetTop(rectangles[3], (position.Y + 1) * blockSize);
+                            Canvas.SetLeft(rectangles[3], (position.X) * blockSize);
+                            rectangles[3].Tag = new Point(position.X, position.Y + 1);
+                            break;
+                        case 2:
+                            //(X - 1,Y) (X,Y)
+                            //          (X,Y + 1)
+                            //          (X,Y + 2)
+                            for (int i = 0; i < 3; i++) //判断是否可以转向
+                            {
+                                if (IsLegal(position.X, position.Y + i))
+                                {
+                                    return;
+                                }
+                            }
+                            if (IsLegal(position.X - 1, position.Y)) return;
+
+                            for (int i = 0; i < 3; i++)
+                            {
+                                Canvas.SetTop(rectangles[i], (position.Y + i) * blockSize);
+                                Canvas.SetLeft(rectangles[i], position.X * blockSize);
+                                rectangles[i].Tag = new Point(position.X, position.Y + i);
+                            }
+                            Canvas.SetTop(rectangles[3], (position.Y) * blockSize);
+                            Canvas.SetLeft(rectangles[3], (position.X - 1) * blockSize);
+                            rectangles[3].Tag = new Point(position.X - 1, position.Y);
+                            break;
+                        case 3:
+                            //                    (X,Y - 1)
+                            //(X - 2,Y) (X - 1,Y) (X,Y)
+                            for (int i = 0; i < 3; i++) //判断是否可以转向
+                            {
+                                if (IsLegal(position.X - i, position.Y))
+                                {
+                                    return;
+                                }
+                            }
+                            if (IsLegal(position.X, position.Y - 1)) return;
+
+                            for (int i = 0; i < 3; i++)
+                            {
+
+                                Canvas.SetTop(rectangles[i], position.Y * blockSize);
+                                Canvas.SetLeft(rectangles[i], (position.X - 2 + i) * blockSize);
+                                rectangles[i].Tag = new Point(position.X - 2 + i, position.Y);
+                            }
+                            Canvas.SetTop(rectangles[3], (position.Y - 1) * blockSize);
+                            Canvas.SetLeft(rectangles[3], (position.X) * blockSize);
+                            rectangles[3].Tag = new Point(position.X, position.Y - 1);
+                            break;
+                    }
                     break;
                 case 2:
-                    //DrawReverseL();
+                    //DrawReverseL();J
+                    switch (direction)
+                    {
+                        case 0:
+                            //          (X,Y - 2)
+                            //          (X,Y - 1)
+                            //(X - 1,Y) (X,Y)
+                            for (int i = 0; i < 3; i++) //判断是否可以转向
+                            {
+                                if (IsLegal(position.X, position.Y - i))
+                                {
+                                    return;
+                                }
+                            }
+                            if (IsLegal(position.X - 1, position.Y)) return;
+
+                            for (int i = 0; i < 3; i++)
+                            {
+                                Canvas.SetTop(rectangles[i], (position.Y - 2 + i) * blockSize); //画出转向后的矩形
+                                Canvas.SetLeft(rectangles[i], position.X * blockSize); //画出转向后的矩形
+                                rectangles[i].Tag = new Point(position.X, position.Y - 2 + i); //标记矩形位置
+                            }
+                            Canvas.SetTop(rectangles[3], (position.Y) * blockSize);
+                            Canvas.SetLeft(rectangles[3], (position.X - 1) * blockSize);
+                            rectangles[3].Tag = new Point(position.X - 1, position.Y);
+                            break;
+                        case 1:
+                            //(X,Y - 1)
+                            //(X,Y) (X + 1,Y) (X + 2,Y)
+                            for (int i = 0; i < 3; i++) //判断是否可以转向
+                            {
+                                if (IsLegal(position.X + i, position.Y))
+                                {
+                                    return;
+                                }
+                            }
+                            if (IsLegal(position.X, position.Y - 1)) return;
+
+                            for (int i = 0; i < 3; i++)
+                            {
+
+                                Canvas.SetTop(rectangles[i], position.Y * blockSize);
+                                Canvas.SetLeft(rectangles[i], (position.X + i) * blockSize);
+                                rectangles[i].Tag = new Point(position.X + i, position.Y);
+                            }
+                            Canvas.SetTop(rectangles[3], (position.Y - 1) * blockSize);
+                            Canvas.SetLeft(rectangles[3], (position.X) * blockSize);
+                            rectangles[3].Tag = new Point(position.X, position.Y - 1);
+                            break;
+                        case 2:
+                            //(X,Y)     (X + 1,Y)
+                            //(X,Y + 1)
+                            //(X,Y + 2)
+                            for (int i = 0; i < 3; i++) //判断是否可以转向
+                            {
+                                if (IsLegal(position.X, position.Y + i))
+                                {
+                                    return;
+                                }
+                            }
+                            if (IsLegal(position.X + 1, position.Y)) return;
+
+                            for (int i = 0; i < 3; i++)
+                            {
+                                Canvas.SetTop(rectangles[i], (position.Y + i) * blockSize);
+                                Canvas.SetLeft(rectangles[i], position.X * blockSize);
+                                rectangles[i].Tag = new Point(position.X, position.Y + i);
+                            }
+                            Canvas.SetTop(rectangles[3], (position.Y) * blockSize);
+                            Canvas.SetLeft(rectangles[3], (position.X + 1) * blockSize);
+                            rectangles[3].Tag = new Point(position.X + 1, position.Y);
+                            break;
+                        case 3:
+                            //(X - 2,Y) (X - 1,Y) (X,Y)
+                            //                    (X,Y + 1)
+                            for (int i = 0; i < 3; i++) //判断是否可以转向
+                            {
+                                if (IsLegal(position.X - i, position.Y))
+                                {
+                                    return;
+                                }
+                            }
+                            if (IsLegal(position.X, position.Y + 1)) return;
+
+                            for (int i = 0; i < 3; i++)
+                            {
+
+                                Canvas.SetTop(rectangles[i], position.Y * blockSize);
+                                Canvas.SetLeft(rectangles[i], (position.X - 2 + i) * blockSize);
+                                rectangles[i].Tag = new Point(position.X - 2 + i, position.Y);
+                            }
+                            Canvas.SetTop(rectangles[3], (position.Y + 1) * blockSize);
+                            Canvas.SetLeft(rectangles[3], (position.X) * blockSize);
+                            rectangles[3].Tag = new Point(position.X, position.Y + 1);
+                            break;
+                    }
                     break;
                 case 3:
+                    return;
                     //DrawO();
                     break;
                 case 4:
                     //DrawZ();
+                    switch (direction)
+                    {
+                        case 0:
+                            //(X - 1,Y) (X,Y)
+                            //          (X,Y + 1) (X + 1,Y + 1)
+                            for (int i = 0; i < 2; i++) //判断是否可以转向
+                            {
+                                if (IsLegal(position.X - i, position.Y))
+                                {
+                                    return;
+                                }
+                            }
+                            for (int i = 2; i < 4; i++) //判断是否可以转向
+                            {
+                                if (IsLegal(position.X + i - 2, position.Y + 1))
+                                {
+                                    return;
+                                }
+                            }
+
+                            for (int i = 0; i < 2; i++)
+                            {
+                                Canvas.SetTop(rectangles[i], (position.Y) * blockSize); //画出转向后的矩形
+                                Canvas.SetLeft(rectangles[i], (position.X - 1 + i) * blockSize); //画出转向后的矩形
+                                rectangles[i].Tag = new Point(position.X - 1 + i, position.Y); //标记矩形位置
+                            }
+                            for (int i = 2; i < 4; i++)
+                            {
+                                Canvas.SetTop(rectangles[i], (position.Y + 1) * blockSize); //画出转向后的矩形
+                                Canvas.SetLeft(rectangles[i], (position.X + i - 2) * blockSize); //画出转向后的矩形
+                                rectangles[i].Tag = new Point(position.X + i - 2, position.Y + 1); //标记矩形位置
+                            }
+                            break;
+                        case 1:
+                            //              (X,Y - 1)
+                            //  (X - 1,Y)   (X,Y)
+                            //(X - 1,Y + 1)
+                            for (int i = 0; i < 2; i++) //判断是否可以转向
+                            {
+                                if (IsLegal(position.X, position.Y - i))
+                                {
+                                    return;
+                                }
+                            }
+                            for (int i = 2; i < 4; i++) //判断是否可以转向
+                            {
+                                if (IsLegal(position.X - 1, position.Y + i - 2))
+                                {
+                                    return;
+                                }
+                            }
+
+                            for (int i = 0; i < 2; i++)
+                            {
+                                Canvas.SetTop(rectangles[i], (position.Y + i) * blockSize); //画出转向后的矩形
+                                Canvas.SetLeft(rectangles[i], (position.X - 1) * blockSize); //画出转向后的矩形
+                                rectangles[i].Tag = new Point(position.X - 1, position.Y + i); //标记矩形位置
+                            }
+                            for (int i = 2; i < 4; i++)
+                            {
+                                Canvas.SetTop(rectangles[i], (position.Y - i + 2) * blockSize); //画出转向后的矩形
+                                Canvas.SetLeft(rectangles[i], (position.X) * blockSize); //画出转向后的矩形
+                                rectangles[i].Tag = new Point(position.X, position.Y - i + 2); //标记矩形位置
+                            }
+                            break;
+                        case 2:
+                            //(X - 1,Y) (X,Y)
+                            //          (X,Y + 1) (X + 1,Y + 1)
+                            for (int i = 0; i < 2; i++) //判断是否可以转向
+                            {
+                                if (IsLegal(position.X - i, position.Y))
+                                {
+                                    return;
+                                }
+                            }
+                            for (int i = 2; i < 4; i++) //判断是否可以转向
+                            {
+                                if (IsLegal(position.X + i - 2, position.Y + 1))
+                                {
+                                    return;
+                                }
+                            }
+
+                            for (int i = 0; i < 2; i++)
+                            {
+                                Canvas.SetTop(rectangles[i], (position.Y) * blockSize); //画出转向后的矩形
+                                Canvas.SetLeft(rectangles[i], (position.X - 1 + i) * blockSize); //画出转向后的矩形
+                                rectangles[i].Tag = new Point(position.X - 1 + i, position.Y); //标记矩形位置
+                            }
+                            for (int i = 2; i < 4; i++)
+                            {
+                                Canvas.SetTop(rectangles[i], (position.Y + 1) * blockSize); //画出转向后的矩形
+                                Canvas.SetLeft(rectangles[i], (position.X + i - 2) * blockSize); //画出转向后的矩形
+                                rectangles[i].Tag = new Point(position.X + i, position.Y + 1); //标记矩形位置
+                            }
+                            break;
+                        case 3:
+                            //              (X,Y - 1)
+                            //  (X - 1,Y)   (X,Y)
+                            //(X - 1,Y + 1)
+                            for (int i = 0; i < 2; i++) //判断是否可以转向
+                            {
+                                if (IsLegal(position.X, position.Y - i))
+                                {
+                                    return;
+                                }
+                            }
+                            for (int i = 2; i < 4; i++) //判断是否可以转向
+                            {
+                                if (IsLegal(position.X - 1, position.Y + i - 2))
+                                {
+                                    return;
+                                }
+                            }
+
+                            for (int i = 0; i < 2; i++)
+                            {
+                                Canvas.SetTop(rectangles[i], (position.Y + i) * blockSize); //画出转向后的矩形
+                                Canvas.SetLeft(rectangles[i], (position.X - 1) * blockSize); //画出转向后的矩形
+                                rectangles[i].Tag = new Point(position.X - 1, position.Y + i); //标记矩形位置
+                            }
+                            for (int i = 2; i < 4; i++)
+                            {
+                                Canvas.SetTop(rectangles[i], (position.Y - i + 2) * blockSize); //画出转向后的矩形
+                                Canvas.SetLeft(rectangles[i], (position.X) * blockSize); //画出转向后的矩形
+                                rectangles[i].Tag = new Point(position.X, position.Y - i + 2); //标记矩形位置
+                            }
+                            break;
+                    }
                     break;
                 case 5:
                     //DrawReverseZ();
+                    switch (direction)
+                    {
+                        case 0:
+                            //                (X,Y)       (X + 1 , Y)
+                            //(X - 1,Y + 1) (X,Y + 1)
+                            for (int i = 0; i < 2; i++) //判断是否可以转向
+                            {
+                                if (IsLegal(position.X - i, position.Y + 1))
+                                {
+                                    return;
+                                }
+                            }
+                            for (int i = 2; i < 4; i++) //判断是否可以转向
+                            {
+                                if (IsLegal(position.X + i - 2, position.Y))
+                                {
+                                    return;
+                                }
+                            }
+
+                            for (int i = 0; i < 2; i++)
+                            {
+                                Canvas.SetTop(rectangles[i], (position.Y) * blockSize); //画出转向后的矩形
+                                Canvas.SetLeft(rectangles[i], (position.X + i) * blockSize); //画出转向后的矩形
+                                rectangles[i].Tag = new Point(position.X + i, position.Y); //标记矩形位置
+                            }
+                            for (int i = 2; i < 4; i++)
+                            {
+                                Canvas.SetTop(rectangles[i], (position.Y + 1) * blockSize); //画出转向后的矩形
+                                Canvas.SetLeft(rectangles[i], (position.X - i + 2) * blockSize); //画出转向后的矩形
+                                rectangles[i].Tag = new Point(position.X - i + 2, position.Y + 1); //标记矩形位置
+                            }
+                            break;
+                        case 1:
+                            //(X - 1,Y - 1)            
+                            //(X - 1,Y)     (X,Y)
+                            //              (X,Y + 1)
+                            for (int i = 0; i < 2; i++) //判断是否可以转向
+                            {
+                                if (IsLegal(position.X - 1, position.Y - i))
+                                {
+                                    return;
+                                }
+                            }
+                            for (int i = 2; i < 4; i++) //判断是否可以转向
+                            {
+                                if (IsLegal(position.X, position.Y + i - 2))
+                                {
+                                    return;
+                                }
+                            }
+
+                            for (int i = 0; i < 2; i++)
+                            {
+                                Canvas.SetTop(rectangles[i], (position.Y + i) * blockSize); //画出转向后的矩形
+                                Canvas.SetLeft(rectangles[i], (position.X) * blockSize); //画出转向后的矩形
+                                rectangles[i].Tag = new Point(position.X, position.Y + i); //标记矩形位置
+                            }
+                            for (int i = 2; i < 4; i++)
+                            {
+                                Canvas.SetTop(rectangles[i], (position.Y - i + 2) * blockSize); //画出转向后的矩形
+                                Canvas.SetLeft(rectangles[i], (position.X - 1) * blockSize); //画出转向后的矩形
+                                rectangles[i].Tag = new Point(position.X - 1, position.Y - i + 2); //标记矩形位置
+                            }
+                            break;
+                        case 2:
+                            //                (X,Y)       (X + 1 , Y)
+                            //(X - 1,Y + 1) (X,Y + 1)
+                            for (int i = 0; i < 2; i++) //判断是否可以转向
+                            {
+                                if (IsLegal(position.X - i, position.Y + 1))
+                                {
+                                    return;
+                                }
+                            }
+                            for (int i = 2; i < 4; i++) //判断是否可以转向
+                            {
+                                if (IsLegal(position.X + i - 2, position.Y))
+                                {
+                                    return;
+                                }
+                            }
+
+                            for (int i = 0; i < 2; i++)
+                            {
+                                Canvas.SetTop(rectangles[i], (position.Y) * blockSize); //画出转向后的矩形
+                                Canvas.SetLeft(rectangles[i], (position.X + i) * blockSize); //画出转向后的矩形
+                                rectangles[i].Tag = new Point(position.X + i, position.Y); //标记矩形位置
+                            }
+                            for (int i = 2; i < 4; i++)
+                            {
+                                Canvas.SetTop(rectangles[i], (position.Y + 1) * blockSize); //画出转向后的矩形
+                                Canvas.SetLeft(rectangles[i], (position.X - i + 2) * blockSize); //画出转向后的矩形
+                                rectangles[i].Tag = new Point(position.X - i + 2, position.Y + 1); //标记矩形位置
+                            }
+                            break;
+                        case 3:
+                            //(X - 1,Y - 1)            
+                            //(X - 1,Y)     (X,Y)
+                            //              (X,Y + 1)
+                            for (int i = 0; i < 2; i++) //判断是否可以转向
+                            {
+                                if (IsLegal(position.X - 1, position.Y - i))
+                                {
+                                    return;
+                                }
+                            }
+                            for (int i = 2; i < 4; i++) //判断是否可以转向
+                            {
+                                if (IsLegal(position.X, position.Y + i - 2))
+                                {
+                                    return;
+                                }
+                            }
+
+                            for (int i = 0; i < 2; i++)
+                            {
+                                Canvas.SetTop(rectangles[i], (position.Y + i) * blockSize); //画出转向后的矩形
+                                Canvas.SetLeft(rectangles[i], (position.X) * blockSize); //画出转向后的矩形
+                                rectangles[i].Tag = new Point(position.X, position.Y + i); //标记矩形位置
+                            }
+                            for (int i = 2; i < 4; i++)
+                            {
+                                Canvas.SetTop(rectangles[i], (position.Y - i + 2) * blockSize); //画出转向后的矩形
+                                Canvas.SetLeft(rectangles[i], (position.X - 1) * blockSize); //画出转向后的矩形
+                                rectangles[i].Tag = new Point(position.X - 1, position.Y - i + 2); //标记矩形位置
+                            }
+                            break;
+                    }
+                    break;
+                case 6:
+                    //DrawT();
+                    switch (direction)
+                    {
+                        case 0:
+                            //(X - 1,Y) (X,Y) (X + 1,Y)
+                            //        (X,Y + 1)
+                            for (int i = 0; i < 3; i++) //判断是否可以转向
+                            {
+                                if (IsLegal(position.X - 1 + i, position.Y))
+                                {
+                                    return;
+                                }
+                            }
+                            if (IsLegal(position.X, position.Y + 1)) return;
+
+                            for (int i = 0; i < 3; i++)
+                            {
+                                Canvas.SetTop(rectangles[i], (position.Y) * blockSize); //画出转向后的矩形
+                                Canvas.SetLeft(rectangles[i], (position.X - 1 + i) * blockSize); //画出转向后的矩形
+                                rectangles[i].Tag = new Point(position.X - 1 + i, position.Y); //标记矩形位置
+                            }
+                            Canvas.SetTop(rectangles[3], (position.Y + 1) * blockSize);
+                            Canvas.SetLeft(rectangles[3], (position.X) * blockSize);
+                            rectangles[3].Tag = new Point(position.X, position.Y + 1);
+                            break;
+                        case 1:
+                            //          (X,Y - 1)
+                            //(X - 1,Y) (X,Y)
+                            //          (X,Y + 1)
+                            for (int i = 0; i < 3; i++) //判断是否可以转向
+                            {
+                                if (IsLegal(position.X, position.Y - 1 + i))
+                                {
+                                    return;
+                                }
+                            }
+                            if (IsLegal(position.X - 1, position.Y)) return;
+
+                            for (int i = 0; i < 3; i++)
+                            {
+
+                                Canvas.SetTop(rectangles[i], (position.Y - 1 + i) * blockSize);
+                                Canvas.SetLeft(rectangles[i], (position.X) * blockSize);
+                                rectangles[i].Tag = new Point(position.X, position.Y - 1 + i);
+                            }
+                            Canvas.SetTop(rectangles[3], (position.Y) * blockSize);
+                            Canvas.SetLeft(rectangles[3], (position.X - 1) * blockSize);
+                            rectangles[3].Tag = new Point(position.X - 1, position.Y);
+                            break;
+                        case 2:
+                            //          (X,Y - 1)
+                            //(X - 1,Y) (X,Y)     (X + 1,Y)
+                            for (int i = 0; i < 3; i++) //判断是否可以转向
+                            {
+                                if (IsLegal(position.X - 1 + i, position.Y))
+                                {
+                                    return;
+                                }
+                            }
+                            if (IsLegal(position.X, position.Y - 1)) return;
+
+                            for (int i = 0; i < 3; i++)
+                            {
+                                Canvas.SetTop(rectangles[i], (position.Y) * blockSize);
+                                Canvas.SetLeft(rectangles[i], (position.X - 1 + i) * blockSize);
+                                rectangles[i].Tag = new Point(position.X - 1 + i, position.Y);
+                            }
+                            Canvas.SetTop(rectangles[3], (position.Y - 1) * blockSize);
+                            Canvas.SetLeft(rectangles[3], (position.X) * blockSize);
+                            rectangles[3].Tag = new Point(position.X, position.Y - 1);
+                            break;
+                        case 3:
+                            //(X,Y - 1)
+                            //(X,Y)     (X + 1,Y)
+                            //(X,Y + 1)
+                            for (int i = 0; i < 3; i++) //判断是否可以转向
+                            {
+                                if (IsLegal(position.X, position.Y - 1 + i))
+                                {
+                                    return;
+                                }
+                            }
+                            if (IsLegal(position.X + 1, position.Y)) return;
+
+                            for (int i = 0; i < 3; i++)
+                            {
+
+                                Canvas.SetTop(rectangles[i], (position.Y - 1 + i) * blockSize);
+                                Canvas.SetLeft(rectangles[i], (position.X) * blockSize);
+                                rectangles[i].Tag = new Point(position.X, position.Y - 1 + i);
+                            }
+                            Canvas.SetTop(rectangles[3], (position.Y) * blockSize);
+                            Canvas.SetLeft(rectangles[3], (position.X + 1) * blockSize);
+                            rectangles[3].Tag = new Point(position.X + 1, position.Y);
+                            break;
+                    }
                     break;
             }
 
@@ -466,27 +1021,250 @@ namespace Tetris
 
         void DrawL()
         {
+            rectangles[0] = new Rectangle();
+            rectangles[0].Width = blockSize;
+            rectangles[0].Height = blockSize;
+            rectangles[0].Stroke = new SolidColorBrush(Colors.White);
+            rectangles[0].Fill = new SolidColorBrush(Colors.Green);
+            rectangles[0].Tag = new Point(2, 0);
+            Canvas.SetTop(rectangles[0], 0);
+            Canvas.SetLeft(rectangles[0], (2) * blockSize);
 
+            rectangles[1] = new Rectangle();
+            rectangles[1].Width = blockSize;
+            rectangles[1].Height = blockSize;
+            rectangles[1].Stroke = new SolidColorBrush(Colors.White);
+            rectangles[1].Fill = new SolidColorBrush(Colors.Green);
+            rectangles[1].Tag = new Point(2, 1);
+            Canvas.SetTop(rectangles[1], 1);
+            Canvas.SetLeft(rectangles[1], (2) * blockSize);
+
+            rectangles[2] = new Rectangle();
+            rectangles[2].Width = blockSize;
+            rectangles[2].Height = blockSize;
+            rectangles[2].Stroke = new SolidColorBrush(Colors.White);
+            rectangles[2].Fill = new SolidColorBrush(Colors.Green);
+            rectangles[2].Tag = new Point(2, 2);
+            Canvas.SetTop(rectangles[2], 2);
+            Canvas.SetLeft(rectangles[2], (2) * blockSize);
+
+            rectangles[3] = new Rectangle();
+            rectangles[3].Width = blockSize;
+            rectangles[3].Height = blockSize;
+            rectangles[3].Stroke = new SolidColorBrush(Colors.White);
+            rectangles[3].Fill = new SolidColorBrush(Colors.Green);
+            rectangles[3].Tag = new Point(3, 2);
+            Canvas.SetTop(rectangles[3], 2);
+            Canvas.SetLeft(rectangles[3], (3) * blockSize);
+
+            position.X = 2;
+            position.Y = 2;
         }
 
-        void DrawReverseL()
+        void DrawReverseL() //J
         {
+            rectangles[0] = new Rectangle();
+            rectangles[0].Width = blockSize;
+            rectangles[0].Height = blockSize;
+            rectangles[0].Stroke = new SolidColorBrush(Colors.White);
+            rectangles[0].Fill = new SolidColorBrush(Colors.Green);
+            rectangles[0].Tag = new Point(2, 0);
+            Canvas.SetTop(rectangles[0], 0);
+            Canvas.SetLeft(rectangles[0], (2) * blockSize);
 
+            rectangles[1] = new Rectangle();
+            rectangles[1].Width = blockSize;
+            rectangles[1].Height = blockSize;
+            rectangles[1].Stroke = new SolidColorBrush(Colors.White);
+            rectangles[1].Fill = new SolidColorBrush(Colors.Green);
+            rectangles[1].Tag = new Point(2, 1);
+            Canvas.SetTop(rectangles[1], 1);
+            Canvas.SetLeft(rectangles[1], (2) * blockSize);
+
+            rectangles[2] = new Rectangle();
+            rectangles[2].Width = blockSize;
+            rectangles[2].Height = blockSize;
+            rectangles[2].Stroke = new SolidColorBrush(Colors.White);
+            rectangles[2].Fill = new SolidColorBrush(Colors.Green);
+            rectangles[2].Tag = new Point(2, 2);
+            Canvas.SetTop(rectangles[2], 2);
+            Canvas.SetLeft(rectangles[2], (2) * blockSize);
+
+            rectangles[3] = new Rectangle();
+            rectangles[3].Width = blockSize;
+            rectangles[3].Height = blockSize;
+            rectangles[3].Stroke = new SolidColorBrush(Colors.White);
+            rectangles[3].Fill = new SolidColorBrush(Colors.Green);
+            rectangles[3].Tag = new Point(1, 2);
+            Canvas.SetTop(rectangles[3], 2);
+            Canvas.SetLeft(rectangles[3], (1) * blockSize);
+
+            position.X = 2;
+            position.Y = 2;
         }
 
         void DrawO()
         {
+            rectangles[0] = new Rectangle();
+            rectangles[0].Width = blockSize;
+            rectangles[0].Height = blockSize;
+            rectangles[0].Stroke = new SolidColorBrush(Colors.White);
+            rectangles[0].Fill = new SolidColorBrush(Colors.Green);
+            rectangles[0].Tag = new Point(2, 0);
+            Canvas.SetTop(rectangles[0], 0);
+            Canvas.SetLeft(rectangles[0], (2) * blockSize);
 
+            rectangles[1] = new Rectangle();
+            rectangles[1].Width = blockSize;
+            rectangles[1].Height = blockSize;
+            rectangles[1].Stroke = new SolidColorBrush(Colors.White);
+            rectangles[1].Fill = new SolidColorBrush(Colors.Green);
+            rectangles[1].Tag = new Point(2, 1);
+            Canvas.SetTop(rectangles[1], 1);
+            Canvas.SetLeft(rectangles[1], (2) * blockSize);
+
+            rectangles[2] = new Rectangle();
+            rectangles[2].Width = blockSize;
+            rectangles[2].Height = blockSize;
+            rectangles[2].Stroke = new SolidColorBrush(Colors.White);
+            rectangles[2].Fill = new SolidColorBrush(Colors.Green);
+            rectangles[2].Tag = new Point(3, 0);
+            Canvas.SetTop(rectangles[2], 0);
+            Canvas.SetLeft(rectangles[2], (3) * blockSize);
+
+            rectangles[3] = new Rectangle();
+            rectangles[3].Width = blockSize;
+            rectangles[3].Height = blockSize;
+            rectangles[3].Stroke = new SolidColorBrush(Colors.White);
+            rectangles[3].Fill = new SolidColorBrush(Colors.Green);
+            rectangles[3].Tag = new Point(3, 1);
+            Canvas.SetTop(rectangles[3], 1);
+            Canvas.SetLeft(rectangles[3], (3) * blockSize);
+
+            position.X = 2;
         }
 
         void DrawZ()
         {
+            rectangles[0] = new Rectangle();
+            rectangles[0].Width = blockSize;
+            rectangles[0].Height = blockSize;
+            rectangles[0].Stroke = new SolidColorBrush(Colors.White);
+            rectangles[0].Fill = new SolidColorBrush(Colors.Green);
+            rectangles[0].Tag = new Point(2, 0);
+            Canvas.SetTop(rectangles[0], 0);
+            Canvas.SetLeft(rectangles[0], (2) * blockSize);
 
+            rectangles[1] = new Rectangle();
+            rectangles[1].Width = blockSize;
+            rectangles[1].Height = blockSize;
+            rectangles[1].Stroke = new SolidColorBrush(Colors.White);
+            rectangles[1].Fill = new SolidColorBrush(Colors.Green);
+            rectangles[1].Tag = new Point(3, 0);
+            Canvas.SetTop(rectangles[1], 0);
+            Canvas.SetLeft(rectangles[1], (3) * blockSize);
+
+            rectangles[2] = new Rectangle();
+            rectangles[2].Width = blockSize;
+            rectangles[2].Height = blockSize;
+            rectangles[2].Stroke = new SolidColorBrush(Colors.White);
+            rectangles[2].Fill = new SolidColorBrush(Colors.Green);
+            rectangles[2].Tag = new Point(3, 1);
+            Canvas.SetTop(rectangles[2], 1);
+            Canvas.SetLeft(rectangles[2], (3) * blockSize);
+
+            rectangles[3] = new Rectangle();
+            rectangles[3].Width = blockSize;
+            rectangles[3].Height = blockSize;
+            rectangles[3].Stroke = new SolidColorBrush(Colors.White);
+            rectangles[3].Fill = new SolidColorBrush(Colors.Green);
+            rectangles[3].Tag = new Point(4, 1);
+            Canvas.SetTop(rectangles[3], 1);
+            Canvas.SetLeft(rectangles[3], (4) * blockSize);
+
+            position.X = 3;
         }
 
-        void DrawReverseZ()
+        void DrawReverseZ() //S
         {
+            rectangles[0] = new Rectangle();
+            rectangles[0].Width = blockSize;
+            rectangles[0].Height = blockSize;
+            rectangles[0].Stroke = new SolidColorBrush(Colors.White);
+            rectangles[0].Fill = new SolidColorBrush(Colors.Green);
+            rectangles[0].Tag = new Point(3, 0);
+            Canvas.SetTop(rectangles[0], 0);
+            Canvas.SetLeft(rectangles[0], (3) * blockSize);
 
+            rectangles[1] = new Rectangle();
+            rectangles[1].Width = blockSize;
+            rectangles[1].Height = blockSize;
+            rectangles[1].Stroke = new SolidColorBrush(Colors.White);
+            rectangles[1].Fill = new SolidColorBrush(Colors.Green);
+            rectangles[1].Tag = new Point(2, 0);
+            Canvas.SetTop(rectangles[1], 0);
+            Canvas.SetLeft(rectangles[1], (2) * blockSize);
+
+            rectangles[2] = new Rectangle();
+            rectangles[2].Width = blockSize;
+            rectangles[2].Height = blockSize;
+            rectangles[2].Stroke = new SolidColorBrush(Colors.White);
+            rectangles[2].Fill = new SolidColorBrush(Colors.Green);
+            rectangles[2].Tag = new Point(2, 1);
+            Canvas.SetTop(rectangles[2], 1);
+            Canvas.SetLeft(rectangles[2], (2) * blockSize);
+
+            rectangles[3] = new Rectangle();
+            rectangles[3].Width = blockSize;
+            rectangles[3].Height = blockSize;
+            rectangles[3].Stroke = new SolidColorBrush(Colors.White);
+            rectangles[3].Fill = new SolidColorBrush(Colors.Green);
+            rectangles[3].Tag = new Point(1, 1);
+            Canvas.SetTop(rectangles[3], 1);
+            Canvas.SetLeft(rectangles[3], (1) * blockSize);
+
+            position.X = 2;
+        }
+
+        void DrawT()
+        {
+            rectangles[0] = new Rectangle();
+            rectangles[0].Width = blockSize;
+            rectangles[0].Height = blockSize;
+            rectangles[0].Stroke = new SolidColorBrush(Colors.White);
+            rectangles[0].Fill = new SolidColorBrush(Colors.Green);
+            rectangles[0].Tag = new Point(2, 0);
+            Canvas.SetTop(rectangles[0], 0);
+            Canvas.SetLeft(rectangles[0], (2) * blockSize);
+
+            rectangles[1] = new Rectangle();
+            rectangles[1].Width = blockSize;
+            rectangles[1].Height = blockSize;
+            rectangles[1].Stroke = new SolidColorBrush(Colors.White);
+            rectangles[1].Fill = new SolidColorBrush(Colors.Green);
+            rectangles[1].Tag = new Point(3, 0);
+            Canvas.SetTop(rectangles[1], 0);
+            Canvas.SetLeft(rectangles[1], (3) * blockSize);
+
+            rectangles[2] = new Rectangle();
+            rectangles[2].Width = blockSize;
+            rectangles[2].Height = blockSize;
+            rectangles[2].Stroke = new SolidColorBrush(Colors.White);
+            rectangles[2].Fill = new SolidColorBrush(Colors.Green);
+            rectangles[2].Tag = new Point(4, 0);
+            Canvas.SetTop(rectangles[2], 0);
+            Canvas.SetLeft(rectangles[2], (4) * blockSize);
+
+            rectangles[3] = new Rectangle();
+            rectangles[3].Width = blockSize;
+            rectangles[3].Height = blockSize;
+            rectangles[3].Stroke = new SolidColorBrush(Colors.White);
+            rectangles[3].Fill = new SolidColorBrush(Colors.Green);
+            rectangles[3].Tag = new Point(3, 1);
+            Canvas.SetTop(rectangles[3], 1);
+            Canvas.SetLeft(rectangles[3], (3) * blockSize);
+
+            position.X = 3;
         }
     }
 }
